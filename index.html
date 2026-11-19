@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DersPusulası</title>
+<style>
+:root{--navy:#233c70;--blue:#5275b7;--bg:#f4f7fc;--ink:#1d2940;--muted:#71809b;--line:#e8edf5;--white:#fff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink)}
+.wrap{max-width:1000px;margin:auto;padding:22px}.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}.brand{font-size:24px;font-weight:850;color:var(--navy)}.tag{font-size:12px;background:#e6edf9;padding:8px 12px;border-radius:20px;color:var(--navy)}
+.hero{background:linear-gradient(135deg,#233c70,#5278bb);color:white;border-radius:22px;padding:26px;margin-bottom:18px}.hero small{opacity:.8}.hero h1{font-size:clamp(24px,4vw,34px);line-height:1.2;margin:9px 0}.hero p{margin:0;opacity:.86}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}.stat,.panel{background:white;border-radius:18px;padding:18px;box-shadow:0 4px 18px #20345c08}.stat small{color:var(--muted)}.stat strong{display:block;font-size:26px;margin-top:6px}.grid{display:grid;grid-template-columns:1.4fr 1fr;gap:16px}.panel h2{font-size:18px;margin:0 0 14px}.form{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.form input,.form select{border:1px solid var(--line);border-radius:11px;padding:11px;background:white;color:var(--ink);font:inherit;min-width:0}.form input{flex:1;min-width:130px}.btn{border:0;border-radius:11px;background:var(--navy);color:white;padding:11px 15px;font-weight:700;cursor:pointer}.btn:hover{filter:brightness(1.08)}.task{display:flex;align-items:center;gap:11px;padding:12px 0;border-bottom:1px solid var(--line)}.task:last-child{border-bottom:0}.task input{width:18px;height:18px;accent-color:var(--blue)}.task .details{flex:1}.task b{display:block}.task small{color:var(--muted)}.done b{text-decoration:line-through;color:#91a0b7}.delete{border:0;background:#f2f4f8;color:#75839b;border-radius:8px;padding:7px 10px;cursor:pointer}.empty{color:var(--muted);padding:15px 0}.progress{height:9px;background:#edf1f7;border-radius:10px;overflow:hidden;margin:12px 0}.bar{height:100%;background:linear-gradient(90deg,#5b80c5,#91addc);width:0;transition:width .25s}.goal{padding:12px;background:#f5f7fb;border-radius:12px;margin:8px 0}.foot{text-align:center;color:var(--muted);font-size:12px;padding:22px}
+@media(max-width:700px){.wrap{padding:14px}.grid{grid-template-columns:1fr}.stats{gap:8px}.stat{padding:13px}.stat strong{font-size:22px}.hero{padding:21px}.top{margin-bottom:16px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top"><div class="brand">🧭 DersPusulası</div><div class="tag">Öğrenci paneli</div></header>
+<section class="hero"><small id="today"></small><h1>Bugün hedeflerine<br>bir adım daha yaklaş! 🚀</h1><p>Planını oluştur, çalışmalarını tamamla.</p></section>
+<section class="stats">
+<div class="stat"><small>Günlük hedef</small><strong><span id="goalHours">3</span> saat</strong></div>
+<div class="stat"><small>Tamamlanan</small><strong id="completed">0 / 0</strong></div>
+<div class="stat"><small>İlerleme</small><strong id="percent">0%</strong></div>
+</section>
+<div class="grid">
+<section class="panel"><h2>📚 Bugünkü plan</h2>
+<form class="form" id="taskForm"><input id="taskName" placeholder="Ders veya görev (örn. Matematik)" required><input id="taskDetail" placeholder="Konu / süre (örn. Üçgenler · 40 dk)"><button class="btn">Ekle +</button></form>
+<div id="tasks"></div>
+</section>
+<aside class="panel"><h2>🎯 Hedeflerim</h2>
+<div class="goal">🏆 Dönem sonu: Takdir belgesi</div><div class="goal">📖 Düzenli çalışma alışkanlığı</div><div class="goal">✈️ Gelecek: Uçak Teknolojisi</div>
+<h2 style="margin-top:22px">📈 Günlük ilerleme</h2><div class="progress"><div class="bar" id="bar"></div></div><small id="progressText" style="color:var(--muted)">Başlamak için ilk görevini ekle.</small>
+<div style="margin-top:20px"><label for="hours" style="font-weight:700">Günlük hedef (saat)</label><div class="form" style="margin-top:8px"><input id="hours" type="number" min="1" max="12" value="3" style="max-width:100px"><button class="btn" id="saveGoal" type="button">Kaydet</button></div></div>
+</aside>
+</div>
+<div class="foot">DersPusulası · Hedefine giden yol</div>
+</div>
+<script>
+const key='derspusulasi_tasks_v1', goalKey='derspusulasi_goal_v1';
+let tasks=JSON.parse(localStorage.getItem(key)||'[]');
+const $=id=>document.getElementById(id);
+const date=new Date();$('today').textContent=date.toLocaleDateString('tr-TR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+$('hours').value=localStorage.getItem(goalKey)||3;$('goalHours').textContent=$('hours').value;
+function save(){localStorage.setItem(key,JSON.stringify(tasks));render()}
+function render(){
+ const host=$('tasks');host.innerHTML='';
+ if(!tasks.length)host.innerHTML='<div class="empty">Henüz görev yok. Yukarıdan ilk görevini ekle! ✨</div>';
+ tasks.forEach((t,i)=>{const row=document.createElement('div');row.className='task'+(t.done?' done':'');
+ row.innerHTML=`<input type="checkbox" ${t.done?'checked':''} aria-label="Görevi tamamla"><div class="details"><b></b><small></small></div><button class="delete" aria-label="Sil">Sil</button>`;
+ row.querySelector('b').textContent=t.name;row.querySelector('small').textContent=t.detail||'Bugünkü görev';
+ row.querySelector('input').onchange=e=>{tasks[i].done=e.target.checked;save()};
+ row.querySelector('.delete').onclick=()=>{tasks.splice(i,1);save()};host.appendChild(row)});
+ const done=tasks.filter(t=>t.done).length,total=tasks.length,p=total?Math.round(done/total*100):0;
+ $('completed').textContent=`${done} / ${total}`;$('percent').textContent=p+'%';$('bar').style.width=p+'%';
+ $('progressText').textContent=total?`${done} görev tamamlandı. ${p}% ilerleme.`:'Başlamak için ilk görevini ekle.';
+}
+$('taskForm').onsubmit=e=>{e.preventDefault();tasks.push({name:$('taskName').value.trim(),detail:$('taskDetail').value.trim(),done:false});$('taskName').value='';$('taskDetail').value='';save()};
+$('saveGoal').onclick=()=>{let n=Math.max(1,Math.min(12,Number($('hours').value)||3));$('hours').value=n;localStorage.setItem(goalKey,n);$('goalHours').textContent=n};
+render();
+</script>
+</body>
+</html>
